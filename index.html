@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>My Ideeza ..!! </title>
+  
+  	<link rel="stylesheet" type="text/css" href="styles/myideezastyle.css">
+
+		<script src="https://preview.babylonjs.com/babylon.js"></script>
+        <script src="https://preview.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+        <script src="https://preview.babylonjs.com/serializers/babylonjs.serializers.js"></script>
+        <script src="https://code.jquery.com/pep/0.4.3/pep.js"></script>
+        <script type="text/javascript" src="js/filesaver.js"></script>
+
+
+
+</head>
+<body>
+
+	<canvas id="renderCanvas" touch-action="none"></canvas>
+
+	<script type="text/javascript">
+		
+		var canvas = document.getElementById("renderCanvas");
+		var engine = new BABYLON.Engine(canvas,true);
+
+		var createScene = function(){
+
+			var scene = new BABYLON.Scene(engine);
+			var camera = new BABYLON.ArcRotateCamera("Camera",Math.PI/2,Math.PI/2,2,new BABYLON.Vector3(0,0,5),scene);
+			camera.attachControl(canvas,true);
+
+			var light1 = new BABYLON.HemisphericLight("light1",new BABYLON.Vector3(1,1,0),scene);
+			var light2 = new BABYLON.PointLight("light2",new BABYLON.Vector3(0,1,-1),scene);
+
+			return scene;
+		};
+
+		var scene = createScene();
+        var gizmoManager = new BABYLON.GizmoManager(scene);
+
+		engine.runRenderLoop(function () {
+                scene.render();
+        });
+
+        // Watch for browser/canvas resize events
+        window.addEventListener("resize", function () {
+                engine.resize();
+        });
+
+
+        function uploadObjButton(){
+        	
+
+            // Append glTF model to scene.
+            	BABYLON.SceneLoader.Append("objfiles/",idFileObj.files[0].name, scene, function (scene) {
+                // Create a default arc rotate camera and light.
+                scene.createDefaultCameraOrLight(true, true, true);
+
+                // The default camera looks at the back of the asset.
+                // Rotate the camera by 180 degrees to the front of the asset.
+                scene.activeCamera.alpha += Math.PI;
+            });
+		 }
+
+
+        function startEditing(){
+
+            // Initialize GizmoManager
+           
+            gizmoManager.boundingBoxGizmoEnabled=true;
+            // Restrict gizmos to only spheres
+            gizmoManager.attachableMeshes = scene.meshes;
+            // Toggle gizmos with keyboard buttons
+            document.onkeydown = (e)=>{
+                if(e.key == 'w'){
+                    gizmoManager.positionGizmoEnabled = !gizmoManager.positionGizmoEnabled;
+                }
+                if(e.key == 'e'){
+                    gizmoManager.rotationGizmoEnabled = !gizmoManager.rotationGizmoEnabled;
+                }
+                if(e.key == 'r'){
+                    gizmoManager.scaleGizmoEnabled = !gizmoManager.scaleGizmoEnabled;
+                }
+                if(e.key == 'q'){
+                    gizmoManager.boundingBoxGizmoEnabled = !gizmoManager.boundingBoxGizmoEnabled;
+                }
+                if(e.key == 'd'){
+                    
+                    gizmoManager._attachedMesh.dispose();
+                }
+            }
+
+            document.getElementById("editKeys").innerHTML = "EDIT MODE ON --> w : Positioning , e : Rotation , r : Scale , q Bounding-Box, d : Delete the Object ";
+
+        }
+
+        function stopEditing(){
+
+            gizmoManager.boundingBoxGizmoEnabled=false;
+            gizmoManager.positionGizmoEnabled=false;
+            gizmoManager.rotationGizmoEnabled=false;
+            gizmoManager.scaleGizmoEnabled=false;
+
+            document.onkeydown=null;
+
+
+
+            document.getElementById("editKeys").innerHTML = "";
+
+        }
+
+        function saveObjButton(){
+
+            var temp =  BABYLON.OBJExport.OBJ(scene.meshes);
+       
+
+            var blob = new Blob([temp],{ type: "text/plain;charset=utf-8" });
+            saveAs(blob, "temp_object.obj");
+        }
+
+
+	</script>
+
+	
+
+	<div id="controls">		
+        
+        <label>Upload Obj-File : </label><input type="file" name="fileObj" id="idFileObj" accept=".obj" onchange="uploadObjButton()">
+
+        <button onclick="startEditing()">Start Editing</button>
+        <button onclick="stopEditing()">Stop Editing</button>
+        
+		<button id="saveObj" onclick="saveObjButton()">Save the work..!</button>
+
+        <p id="editKeys"></p>
+
+		
+	</div>
+
+</body>
+</html>
